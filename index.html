@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>亿万伏特Volt的点歌单</title>
+<style>
+  :root{
+    box-sizing: border-box;
+    --bg: #16101F;
+    --bg-elevated: #201731;
+    --bg-row: #1B1329;
+    --border: rgba(243,238,249,0.09);
+    --text: #F3EEF9;
+    --text-muted: #AC9FC9;
+    --accent: #FFB33E;
+    --accent-2: #FF5E7E;
+    --focus: #FFD98A;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html, body{ height: 100%; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+                 "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(60% 50% at 15% -10%, rgba(255,179,62,0.16), transparent 60%),
+      radial-gradient(50% 40% at 100% 0%, rgba(255,94,126,0.14), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  .page{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 18px 64px;
+  }
+
+  header.hero{
+    padding: 6px 4px 22px;
+  }
+  .kicker{
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0 0 6px;
+  }
+  h1{
+    font-size: clamp(28px, 6vw, 38px);
+    line-height: 1.2;
+    margin: 0 0 8px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .hint{
+    color: var(--text-muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin: 0 0 20px;
+    max-width: 46ch;
+  }
+
+  .search-wrap{
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: linear-gradient(var(--bg) 78%, transparent);
+    padding: 10px 0 14px;
+    margin: 0 -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .search-box{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 16px;
+  }
+  .search-box svg{ flex: none; opacity: 0.6; }
+  .search-box input{
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+  }
+  .search-box input::placeholder{ color: var(--text-muted); }
+  .search-box button.clear{
+    display: none;
+    border: none;
+    background: rgba(243,238,249,0.1);
+    color: var(--text-muted);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .search-box.has-text button.clear{ display: block; }
+
+  .meta-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 2px 4px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+  .meta-row button.toggle-all{
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .meta-row button.toggle-all:active{ transform: scale(0.97); }
+  .meta-actions{ display: flex; gap: 8px; }
+
+  .blind-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(10,7,16,0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .blind-overlay.show{ opacity: 1; pointer-events: auto; }
+  .blind-card{
+    width: 100%;
+    max-width: 360px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+  .blind-emoji{ font-size: 34px; margin-bottom: 6px; }
+  .blind-label{ color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+  .blind-spin{
+    font-size: 21px;
+    font-weight: 800;
+    min-height: 30px;
+    margin-bottom: 4px;
+    color: var(--accent);
+  }
+  .blind-artist{
+    color: var(--text-muted);
+    font-size: 14px;
+    min-height: 20px;
+    margin-bottom: 20px;
+  }
+  .blind-actions{ display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .blind-actions button{
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .blind-copy{ background: var(--accent); color: #241705; font-weight: 700; }
+  .blind-copy.copied{ background: #5CCB8C; color: #0C2416; }
+  .blind-again{ background: rgba(243,238,249,0.08); color: var(--text); }
+  .blind-close{ background: transparent; color: var(--text-muted); }
+
+  .groups{ margin-top: 10px; }
+
+  .group{
+    border-bottom: 1px solid var(--border);
+  }
+  .group-head{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 15px 6px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 16.5px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+  .group-head .left{ display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .group-head .name{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .group-head .count{
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 13px;
+    flex: none;
+  }
+  .group-head .chev{
+    flex: none;
+    width: 18px; height: 18px;
+    color: var(--text-muted);
+    transition: transform .18s ease;
+  }
+  .group.open .group-head .chev{ transform: rotate(180deg); }
+
+  .song-list{
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .22s ease;
+  }
+  .group.open .song-list{ grid-template-rows: 1fr; }
+  .song-list-inner{ overflow: hidden; }
+
+  .song-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 6px 11px 18px;
+    border-radius: 10px;
+  }
+  .song-row + .song-row{ margin-top: 2px; }
+  .song-row:hover{ background: var(--bg-row); }
+  .song-title{
+    font-size: 15.5px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .song-title mark{
+    background: rgba(255,179,62,0.35);
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+  .copy-btn{
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: rgba(243,238,249,0.04);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .copy-btn:hover{ border-color: var(--accent-2); color: var(--text); }
+  .copy-btn:active{ transform: scale(0.96); }
+  .copy-btn.copied{
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(255,179,62,0.1);
+  }
+  .copy-btn svg{ width: 14px; height: 14px; }
+
+  .empty-state{
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state.show{ display: block; }
+  .empty-state .big{ font-size: 32px; margin-bottom: 10px; }
+
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    transform: translate(-50%, 12px);
+    background: #2A1F40;
+    border: 1px solid rgba(255,179,62,0.4);
+    color: var(--text);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 20;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .toast.show{ opacity: 1; transform: translate(-50%, 0); }
+
+  footer{
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    padding: 30px 10px 6px;
+    opacity: 0.7;
+  }
+
+  a, button{ -webkit-tap-highlight-color: transparent; }
+  :focus-visible{ outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  @media (min-width: 640px){
+    .page{ padding-top: 44px; }
+    .song-title{ font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <h1 id="pageTitle">亿万伏特Volt的点歌单</h1>
+    <p class="hint">搜歌名或歌手都可以，点「复制」把歌名粘到弹幕里发出来就行～</p>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search-box" id="searchBox">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="searchInput" type="text" inputmode="search" placeholder="搜索歌名或歌手…" autocomplete="off">
+      <button class="clear" id="clearBtn" aria-label="清空">✕</button>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span id="statLine">共 0 首 · 0 位歌手</span>
+    <span class="meta-actions">
+      <button class="toggle-all" id="blindBoxBtn">🎁 盲盒抽歌</button>
+      <button class="toggle-all" id="toggleAllBtn">展开全部</button>
+    </span>
+  </div>
+
+  <div class="groups" id="groups"></div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="big">🎧</div>
+    <div>没找到相关的歌，换个关键词试试</div>
+  </div>
+
+  <footer>共 <span id="footerCount">0</span> 首 · 按歌手分类 · 点歌前记得看看主播是否已经唱过啦</footer>
+</div>
+
+<div class="toast" id="toast">已复制歌名</div>
+
+<div class="blind-overlay" id="blindOverlay">
+  <div class="blind-card">
+    <div class="blind-emoji">🎁</div>
+    <div class="blind-label">盲盒抽歌</div>
+    <div class="blind-spin" id="blindSpinTitle">准备抽取…</div>
+    <div class="blind-artist" id="blindSpinArtist">&nbsp;</div>
+    <div class="blind-actions">
+      <button class="blind-copy" id="blindCopyBtn" type="button">复制点歌</button>
+      <button class="blind-again" id="blindAgainBtn" type="button">再抽一次</button>
+      <button class="blind-close" id="blindCloseBtn" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 歌单数据：把你的 Excel 整理成「歌手, 歌名」这样的数组即可
+// 这里先放一些示例歌曲，方便你看效果，之后把真实数据发给我，
+// 我会替换掉这一段并重新发布同一个链接。
+// ============================================================
+const SONGS = [
+  { artist: "capper", title: "蓝本" },
+  { artist: "capper", title: "梦幻上升" },
+  { artist: "capper", title: "无人区玫瑰" },
+  { artist: "rapeter", title: "Not good" },
+  { artist: "rapeter", title: "小Rapper" },
+  { artist: "rapeter", title: "虹桥" },
+  { artist: "Jony J", title: "奴隶" },
+  { artist: "Jony J", title: "山脚" },
+  { artist: "Jony J", title: "不用去猜" },
+  { artist: "沙一汀", title: "普通女孩" },
+  { artist: "沙一汀", title: "red lips" },
+  { artist: "Top barry", title: "My house" },
+  { artist: "待确认歌手", title: "Dats" },
+];
+
+// ============================================================
+// 以下是逻辑部分，一般不需要改动
+// ============================================================
+const groupsEl = document.getElementById('groups');
+const searchInput = document.getElementById('searchInput');
+const searchBox = document.getElementById('searchBox');
+const clearBtn = document.getElementById('clearBtn');
+const statLine = document.getElementById('statLine');
+const footerCount = document.getElementById('footerCount');
+const emptyState = document.getElementById('emptyState');
+const toggleAllBtn = document.getElementById('toggleAllBtn');
+const blindBoxBtn = document.getElementById('blindBoxBtn');
+const toast = document.getElementById('toast');
+
+function groupSongs(list){
+  const map = new Map();
+  list.forEach(s => {
+    if(!map.has(s.artist)) map.set(s.artist, []);
+    map.get(s.artist).push(s);
+  });
+  return map;
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function highlight(text, query){
+  if(!query) return escapeHtml(text);
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if(idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0, idx)) + '<mark>' + escapeHtml(text.slice(idx, idx+query.length)) + '</mark>' + escapeHtml(text.slice(idx+query.length));
+}
+
+let allExpanded = false;
+
+function render(query){
+  const q = (query || '').trim().toLowerCase();
+  const grouped = groupSongs(SONGS);
+  groupsEl.innerHTML = '';
+  let totalShown = 0;
+  let artistCountShown = 0;
+
+  grouped.forEach((songs, artist) => {
+    const artistMatches = artist.toLowerCase().includes(q);
+    const filtered = q === '' ? songs : songs.filter(s =>
+      s.title.toLowerCase().includes(q) || artistMatches
+    );
+    if(filtered.length === 0) return;
+
+    artistCountShown++;
+    totalShown += filtered.length;
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'group';
+    const shouldOpen = q !== '' || allExpanded;
+    if(shouldOpen) groupDiv.classList.add('open');
+
+    const head = document.createElement('button');
+    head.className = 'group-head';
+    head.innerHTML = `
+      <span class="left">
+        <span class="name">${highlight(artist, artistMatches ? q : '')}</span>
+        <span class="count">${filtered.length} 首</span>
+      </span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    `;
+    head.addEventListener('click', () => groupDiv.classList.toggle('open'));
+
+    const listWrap = document.createElement('div');
+    listWrap.className = 'song-list';
+    const listInner = document.createElement('div');
+    listInner.className = 'song-list-inner';
+
+    filtered.forEach(song => {
+      const row = document.createElement('div');
+      row.className = 'song-row';
+      row.innerHTML = `
+        <span class="song-title">${highlight(song.title, artistMatches ? '' : q)}</span>
+        <button class="copy-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span>复制</span>
+        </button>
+      `;
+      const btn = row.querySelector('.copy-btn');
+      btn.addEventListener('click', () => copySong(song, btn));
+      listInner.appendChild(row);
+    });
+
+    listWrap.appendChild(listInner);
+    groupDiv.appendChild(head);
+    groupDiv.appendChild(listWrap);
+    groupsEl.appendChild(groupDiv);
+  });
+
+  statLine.textContent = `共 ${totalShown} 首 · ${artistCountShown} 位歌手`;
+  footerCount.textContent = SONGS.length;
+  emptyState.classList.toggle('show', totalShown === 0);
+}
+
+function copySong(song, btn){
+  const text = `点歌 ${song.title}-${song.artist}`;
+  const done = () => {
+    showToast(`已复制「${song.title}」`);
+    const original = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.querySelector('span').textContent = '已复制';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.querySelector('span').textContent = '复制';
+    }, 1400);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, cb){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    cb();
+  }catch(e){
+    showToast('复制失败，请手动选择歌名');
+  }
+}
+
+let toastTimer;
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+}
+
+// ---- 盲盒抽歌 ----
+const blindOverlay = document.getElementById('blindOverlay');
+const blindSpinTitle = document.getElementById('blindSpinTitle');
+const blindSpinArtist = document.getElementById('blindSpinArtist');
+const blindCopyBtn = document.getElementById('blindCopyBtn');
+const blindAgainBtn = document.getElementById('blindAgainBtn');
+const blindCloseBtn = document.getElementById('blindCloseBtn');
+let blindCurrentSong = null;
+let blindSpinTimer = null;
+
+function runBlindDraw(){
+  clearInterval(blindSpinTimer);
+  blindCopyBtn.classList.remove('copied');
+  blindCopyBtn.textContent = '复制点歌';
+  blindSpinArtist.textContent = '\u00A0';
+  const finalPick = SONGS[Math.floor(Math.random() * SONGS.length)];
+  let ticks = 0;
+  const maxTicks = 16;
+  blindSpinTimer = setInterval(() => {
+    const r = SONGS[Math.floor(Math.random() * SONGS.length)];
+    blindSpinTitle.textContent = r.title;
+    blindSpinArtist.textContent = r.artist;
+    ticks++;
+    if(ticks >= maxTicks){
+      clearInterval(blindSpinTimer);
+      blindCurrentSong = finalPick;
+      blindSpinTitle.textContent = finalPick.title;
+      blindSpinArtist.textContent = finalPick.artist;
+    }
+  }, 70);
+}
+
+blindBoxBtn.addEventListener('click', () => {
+  blindOverlay.classList.add('show');
+  runBlindDraw();
+});
+
+blindAgainBtn.addEventListener('click', runBlindDraw);
+
+blindCloseBtn.addEventListener('click', () => {
+  blindOverlay.classList.remove('show');
+  clearInterval(blindSpinTimer);
+});
+
+blindOverlay.addEventListener('click', (e) => {
+  if(e.target === blindOverlay){
+    blindOverlay.classList.remove('show');
+    clearInterval(blindSpinTimer);
+  }
+});
+
+blindCopyBtn.addEventListener('click', () => {
+  if(!blindCurrentSong) return;
+  const text = `点歌 ${blindCurrentSong.title}-${blindCurrentSong.artist}`;
+  const done = () => {
+    showToast(`已复制「${blindCurrentSong.title}」`);
+    blindCopyBtn.classList.add('copied');
+    blindCopyBtn.textContent = '已复制';
+    setTimeout(() => {
+      blindCopyBtn.classList.remove('copied');
+      blindCopyBtn.textContent = '复制点歌';
+    }, 1400);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+});
+
+searchInput.addEventListener('input', (e) => {
+  searchBox.classList.toggle('has-text', e.target.value.length > 0);
+  render(e.target.value);
+});
+
+clearBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  searchBox.classList.remove('has-text');
+  searchInput.focus();
+  render('');
+});
+
+toggleAllBtn.addEventListener('click', () => {
+  allExpanded = !allExpanded;
+  toggleAllBtn.textContent = allExpanded ? '收起全部' : '展开全部';
+  document.querySelectorAll('.group').forEach(g => g.classList.toggle('open', allExpanded));
+});
+
+render('');
+</script>
+</body>
+</html>
