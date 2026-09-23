@@ -381,16 +381,62 @@ const SONGS = [
   { artist: "capper", title: "蓝本" },
   { artist: "capper", title: "梦幻上升" },
   { artist: "capper", title: "无人区玫瑰" },
-  { artist: "rapeter", title: "Not good" },
-  { artist: "rapeter", title: "小Rapper" },
-  { artist: "rapeter", title: "虹桥" },
+  { artist: "capper", title: "柑橘乌云" },
+  { artist: "capper", title: "雪Distance" },
+  { artist: "capper", title: "纵容" },
+  { artist: "capper", title: "五百二十赫兹" },
+  { artist: "capper", title: "梦幻上升" },
+  { artist: "capper", title: "朋友Friend" },
+  { artist: "Rapeter", title: "Not good" },
+  { artist: "Rapeter", title: "小Rapper" },
+  { artist: "Rapeter", title: "Shower" },
+  { artist: "Rapeter", title: "DD backseat" },
+  { artist: "Rapeter/MC光光/AA/侃迪Kandi", title: "夜之子" },
+  { artist: "Rapeter", title: "两年后" },
+  { artist: "Rapeter", title: "虹桥" },
   { artist: "Jony J", title: "奴隶" },
   { artist: "Jony J", title: "山脚" },
   { artist: "Jony J", title: "不用去猜" },
   { artist: "沙一汀", title: "普通女孩" },
   { artist: "沙一汀", title: "red lips" },
+  { artist: "沙一汀", title: "所以你睡了没" },
+  { artist: "沙一汀", title: "随身汀" },
+  { artist: "沙一汀", title: "我的Folykiki" },
+  { artist: "Top barry", title: "出发的理由" },
+  { artist: "Top barry", title: "不停的" },
+  { artist: "Top barry", title: "荧光海" },
   { artist: "Top barry", title: "My house" },
+  { artist: "Vansdaddy", title: "几句是非" },
   { artist: "Top barry", title: "Dats me" },
+  { artist: "Dobi", title: "我宝贝" },
+  { artist: "Dobi", title: "Truthfully" },
+  { artist: "盛宇", title: "诀爱尽" },
+  { artist: "圣代", title: "书院来信" },
+  { artist: "圣代", title: "阿黑正传" },
+  { artist: "Tizzy T", title: "冷战" },
+  { artist: "Tizzy T", title: "橘子" },
+  { artist: "Tizzy T", title: "100" },
+  { artist: "Tizzy T", title: "99" },
+  { artist: "Tizzy T", title: "飞船失事" },
+  { artist: "Tizzy T", title: "Party是我家" },
+  { artist: "早安", title: "惊喜surprise" },
+  { artist: "早安", title: "麒麟" },
+  { artist: "XMASwu", title: "凌晨威士忌" },
+  { artist: "艾志恒Asen", title: "写不来情歌" },
+  { artist: "马思唯", title: "Coco Elva Tia" },
+  { artist: "杨和苏", title: "小丑女" },
+  { artist: "杨和苏", title: "王位" },
+  { artist: "杨和苏", title: "国王与法老" },
+  { artist: "翁杰", title: "南部Southside" },
+  { artist: "翁杰", title: "城乡" },
+  { artist: "李大奔", title: "狗狗" },
+  { artist: "李大奔", title: "告白" },
+  { artist: "李大奔", title: "江南少爷" },
+  { artist: "李大奔/严浩翔/Rapeter", title: "颜如玉2.0" },
+  { artist: "李大奔/沧桑333", title: "性单恋" },
+  { artist: "沧桑333", title: "公路商店" },
+  { artist: "ljz392", title: "3977" },
+  { artist: "ljz392/ICE", title: "老本行" },
 ];
 
 // ============================================================
@@ -494,7 +540,7 @@ function render(query){
 }
 
 function copySong(song, btn){
-  const text = `点歌 ${song.title}-${song.artist}`;
+  const text = `点歌 ${song.title}`;
   const done = () => {
     showToast(`已复制「${song.title}」`);
     const original = btn.innerHTML;
@@ -590,7 +636,7 @@ blindOverlay.addEventListener('click', (e) => {
 
 blindCopyBtn.addEventListener('click', () => {
   if(!blindCurrentSong) return;
-  const text = `点歌 ${blindCurrentSong.title}-${blindCurrentSong.artist}`;
+  const text = `点歌 ${blindCurrentSong.title}`;
   const done = () => {
     showToast(`已复制「${blindCurrentSong.title}」`);
     blindCopyBtn.classList.add('copied');
